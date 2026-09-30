@@ -17,7 +17,7 @@ FACTORS = [
     ("sos", "Schedule", "Average rating of opponents played (FCS opponents drag this down)."),
     ("recent", "Recent form", "How the team has played in its last few games."),
     ("cupcake", "No cupcakes", "Penalty for FCS and bottom-tier FBS opponents. 100 = no cupcakes."),
-    ("luck", "Luck-adjusted", "Higher = team has been unlucky (lost games it statistically won). Lower = winning coin flips."),
+    ("luck", "Bad luck", "Higher = has had bad luck: lost games they statistically won, so the record undersells them. Lower = has been winning coin flips."),
 ]
 
 NFL_HELP = {
@@ -25,7 +25,7 @@ NFL_HELP = {
     "resume": "Strength of record: how many more wins than a top-8 team would have with this schedule.",
     "efficiency": "Opponent-adjusted EPA per play (offense minus defense).",
     "sos": "Average rating of opponents played.",
-    "luck": "Higher = team has been unlucky in close games (one-score results are treated as coin flips). Lower = winning coin flips.",
+    "luck": "Higher = has had bad luck in close games (one-score results are treated as coin flips). Lower = has been winning coin flips.",
 }
 
 

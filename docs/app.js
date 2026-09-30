@@ -18,7 +18,7 @@ const PRESETS = {
   "Hot right now": { power: 15, resume: 10, efficiency: 15, sos: 5, recent: 55 },
   "Equal": { power: 15, resume: 15, efficiency: 15, sos: 15, recent: 15, cupcake: 15, luck: 10 },
 };
-const SHORT = { power: "PWR", resume: "RES", efficiency: "EFF", sos: "SOS", recent: "FORM", cupcake: "CUP", luck: "LUCK" };
+const SHORT = { power: "PWR", resume: "RES", efficiency: "EFF", sos: "SOS", recent: "FORM", cupcake: "CUP", luck: "UNLK" };
 const LEAGUE_NAME = { cfb: "CFB", nfl: "NFL" };
 
 async function getJSON(url) {

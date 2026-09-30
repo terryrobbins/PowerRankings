@@ -112,8 +112,8 @@
     },
     {
      "key": "luck",
-     "label": "Luck-adjusted",
-     "help": "Higher = team has been unlucky (lost games it statistically won). Lower = winning coin flips."
+     "label": "Bad luck",
+     "help": "Higher = has had bad luck: lost games they statistically won, so the record undersells them. Lower = has been winning coin flips."
     }
    ],
    "default_weights": {
@@ -235,8 +235,8 @@
     },
     {
      "key": "luck",
-     "label": "Luck-adjusted",
-     "help": "Higher = team has been unlucky in close games (one-score results are treated as coin flips). Lower = winning coin flips."
+     "label": "Bad luck",
+     "help": "Higher = has had bad luck in close games (one-score results are treated as coin flips). Lower = has been winning coin flips."
     }
    ],
    "default_weights": {
