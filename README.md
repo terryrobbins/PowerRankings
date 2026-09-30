@@ -1,6 +1,6 @@
-# CFB Power Rankings
+# Power Rankings (CFB + NFL)
 
-Weekly college football power rankings based on who you played and how you played, not on brand name.
+Weekly college football and NFL power rankings based on who you played and how you played, not on brand name.
 Every Monday morning GitHub rebuilds the rankings and updates the website automatically. Your PC doesn't need to be on.
 
 ## One-time setup (~15 minutes)
@@ -28,14 +28,18 @@ Every Monday morning GitHub rebuilds the rankings and updates the website automa
 2. Click **Weekly rankings** → **Run workflow** → **Run workflow**.
 3. After about a minute, refresh your site.
 
-That's it. From now on it runs every Monday at 9am Eastern (and again Tuesday to pick up stat corrections) from August through January.
+That's it. From now on it runs every Monday at 9am Eastern from August through January, and again on Tuesday to pick up Monday Night Football and stat corrections.
 
 ## Using the site
-- **Sliders** change how much each factor counts. The rankings re-sort instantly, and your settings are remembered on that device.
+- **CFB / NFL** toggle at the top right.
+- **Sliders** change how much each factor counts. The rankings re-sort instantly, and your settings are remembered on that device (separately for each league).
+- **Click a column header** (PWR, RES, EFF, …) to rank by that factor only. Click it again to go back. On phones, use the "Rank by" dropdown.
+- **Clear all** sets every slider to 0. **Reset** restores the defaults.
 - **Presets**: *Who'd you beat* (pure résumé), *Who'd win* (predictive), *Hot right now* (recent form).
 - **Click a team** to see why it's ranked where it is: its schedule, cupcake games, and luck.
 - **Overrated / Underrated** tags mark teams the AP poll ranks 10+ spots differently from the model.
-- **Next week's picks** shows the model's pick for every game and its season-long record.
+- **Next week's picks** compares the model's spread with the sportsbooks' spreads and tracks its record straight up and against the spread. College lines come from DraftKings, Bovada, and ESPN Bet. NFL lines come from DraftKings plus the market consensus.
+- **NFL QB flags:** ⚠ marks games where someone other than the team's usual starter played or is listed to start. The rating doesn't adjust for QB changes, so treat flagged picks with caution.
 - To share a team, copy the link while its panel is open.
 
 ## Tweaking the model
@@ -47,13 +51,15 @@ pip install -r requirements.txt
 $env:CFBD_API_KEY = "your-key"
 python src/run_weekly.py              # current season
 python src/run_weekly.py --season 2025  # any past season
+python src/run_weekly.py --league nfl   # one league only
 ```
 Then double-click `preview.bat` to view it in your browser.
 
 ## Files
 | File | What it does |
 |---|---|
-| `src/fetch_data.py` | Downloads games, advanced stats, AP poll, talent, returning production |
+| `src/fetch_data.py` | College data from CollegeFootballData.com (key required) |
+| `src/nfl_data.py` | NFL data from nflverse, plus DraftKings lines from ESPN (no key needed) |
 | `src/model.py` | All ranking math |
 | `src/run_weekly.py` | Runs everything and writes `docs/data/` |
 | `docs/` | The website |

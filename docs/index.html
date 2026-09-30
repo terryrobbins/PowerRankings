@@ -13,10 +13,11 @@
 <body>
 <header class="top">
   <div class="brand">
-    <h1>Power Rankings <span class="tag">CFB</span></h1>
+    <h1>Power Rankings <span class="tag" id="league-tag">CFB</span></h1>
     <p class="sub">Who you played, how you played, and what the record hides. <span id="updated"></span></p>
   </div>
   <div class="controls">
+    <div class="seg" id="league" role="group" aria-label="League"></div>
     <label>Season <select id="season"></select></label>
     <label>After week <select id="week"></select></label>
   </div>
@@ -33,10 +34,11 @@
     <aside class="weights card">
       <div class="weights-head">
         <h2>Weights</h2>
-        <button id="reset" class="link">Reset</button>
+        <span><button id="clear" class="link">Clear all</button> · <button id="reset" class="link">Reset</button></span>
       </div>
       <div class="presets" id="presets"></div>
       <div id="sliders"></div>
+      <p class="note" id="weights-note"></p>
       <p class="note" id="prior-note"></p>
     </aside>
 
@@ -44,13 +46,14 @@
       <div class="filters">
         <input id="search" type="search" placeholder="Search team…" aria-label="Search team">
         <select id="conf" aria-label="Conference"><option value="">All conferences</option></select>
-        <label class="chk"><input type="checkbox" id="top25"> Top 25 only</label>
+        <select id="rankby" aria-label="Rank by"></select>
+        <label class="chk" id="top25-label"><input type="checkbox" id="top25"> Top 25 only</label>
       </div>
       <div class="table-wrap">
         <table id="table">
           <thead><tr>
             <th class="num">#</th><th class="mv"></th><th>Team</th><th class="num">Record</th>
-            <th class="num">AP</th><th class="score-col">Score</th><th class="factors-col">Factor breakdown</th>
+            <th class="num ap">AP</th><th class="score-col">Score</th><th class="factors-col" title="Click a column to rank by that factor only"></th>
           </tr></thead>
           <tbody></tbody>
         </table>
@@ -73,7 +76,9 @@
       <h2>How it works</h2>
       <p>Every Monday morning the model downloads the weekend's results from CollegeFootballData.com and rebuilds the rankings from scratch. Each team gets seven scores from 0 to 100, where 50 is an average FBS team. The sliders decide how much each score counts.</p>
       <ul id="factor-help"></ul>
-      <h3>The cupcake problem</h3>
+      <h3>NFL</h3>
+      <p>NFL rankings use the same engine without the cupcake factor. Résumé is measured against a top-8 team, efficiency is opponent-adjusted EPA per play, and margins are capped at 21 points. Each team's page shows the starting QB for every game and flags when someone other than the usual starter played or is listed to start. The rating itself doesn't know about QB changes, so a ⚠ is a good reason to trust it less. Monday's update runs before Monday Night Football. Tuesday's update adds that game.</p>
+      <h3>The cupcake problem (college)</h3>
       <p>Every FCS opponent is rated like a team about 25 points worse than an average FBS team, and FCS games count only 25% as much in the power rating. Margins are capped at 24 points. Beating an FCS team 70-0 proves about as much as a close loss to an average FBS team. On top of that, the "No cupcakes" factor directly penalizes teams whose wins came mostly against FCS or bottom-40 FBS teams.</p>
       <h3>Early season</h3>
       <p>In the first few weeks there isn't enough data, so ratings start from a preseason guess: last year's rating scaled by returning production, plus roster talent. That guess fades to zero by week 7. After that it's pure on-field results.</p>

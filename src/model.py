@@ -20,6 +20,14 @@ FACTORS = [
     ("luck", "Luck-adjusted", "Higher = team has been unlucky (lost games it statistically won). Lower = winning coin flips."),
 ]
 
+NFL_HELP = {
+    "power": "Opponent-adjusted scoring margin, capped at 21 so garbage-time scores don't count extra.",
+    "resume": "Strength of record: how many more wins than a top-8 team would have with this schedule.",
+    "efficiency": "Opponent-adjusted EPA per play (offense minus defense).",
+    "sos": "Average rating of opponents played.",
+    "luck": "Higher = team has been unlucky in close games (one-score results are treated as coin flips). Lower = winning coin flips.",
+}
+
 
 def phi(x):
     return 0.5 * (1 + erf(x / sqrt(2)))
@@ -54,11 +62,12 @@ def normalize_games(raw_games, fbs):
             "hp": hp, "ap": ap, "done": done, "neutral": bool(g(x, "neutralSite", "neutral_site", default=False)),
             "hwp": g(x, "homePostgameWinProbability", "home_post_win_prob"),
             "start": g(x, "startDate", "start_date"),
+            "hqb": g(x, "homeQB"), "aqb": g(x, "awayQB"), "hrest": g(x, "homeRest"), "arest": g(x, "awayRest"),
         })
     return out
 
 
-def last_completed_week(games):
+def last_completed_week(games, done_share=0.9):
     by_week = defaultdict(list)
     for x in games:
         by_week[x["week"]].append(x["done"])
@@ -66,7 +75,7 @@ def last_completed_week(games):
     if not done_weeks:
         return 0
     w = max(done_weeks)
-    if sum(by_week[w]) / len(by_week[w]) < 0.9:  # week still being played
+    if sum(by_week[w]) / len(by_week[w]) < done_share:  # week still being played
         w -= 1
     return w
 
@@ -202,7 +211,8 @@ def build_week(fbs, games, advanced, polls, week, cfg, prior):
     R = power_ratings(teams, played, cfg, prior, k)
     rank = {t: i + 1 for i, t in enumerate(sorted(teams, key=lambda t: -R[t]))}
     ppa, sr = efficiency_ratings(teams, advanced, fbs, week, cfg)
-    bench = R[sorted(teams, key=lambda t: -R[t])[24]]  # the #25 team's rating
+    bench_rank = min(cfg.get("benchmark_rank", 25), len(teams)) - 1
+    bench = R[sorted(teams, key=lambda t: -R[t])[bench_rank]]  # e.g. the #25 CFB team's rating
     ap = ap_ranks(polls, week)
 
     raw = {f: {} for f, _, _ in FACTORS}
@@ -220,6 +230,12 @@ def build_week(fbs, games, advanced, polls, week, cfg, prior):
             ro = R[onode]
             row = {"week": x["week"], "opp": opp, "fcs": onode == FCS, "loc": loc,
                    "opp_rank": rank.get(onode), "opp_rating": round(ro, 1)}
+            qb = x["hqb"] if home else x["aqb"]
+            if qb:
+                row["qb"] = qb
+            rest, orest = (x["hrest"], x["arest"]) if home else (x["arest"], x["hrest"])
+            if rest is not None and orest is not None and rest != orest:
+                row["rest_diff"] = int(rest - orest)  # + = extra rest vs. opponent
             if x["done"] and x["week"] <= week:
                 us, them = (x["hp"], x["ap"]) if home else (x["ap"], x["hp"])
                 won = us > them
@@ -255,7 +271,11 @@ def build_week(fbs, games, advanced, polls, week, cfg, prior):
         raw["recent"][t] = float(np.mean(perfs[-cfg["recent_games"]:])) if perfs else R[t]
         raw["cupcake"][t] = -(fcs_n + 0.5 * weak_n) / n if n else 0.0
         raw["luck"][t] = -(wins - xw)
+        qbs = [r["qb"] for r in sched if r.get("qb") and "result" in r]
+        nxt = next((r for r in sched if r.get("upcoming")), None)
         detail[t] = {
+            "usual_qb": max(set(qbs), key=qbs.count) if qbs else None,
+            "next_qb": nxt.get("qb") if nxt else None,
             "record": f"{wins}-{losses}", "wins": wins, "losses": losses,
             "one_score": f"{os_w}-{os_l}", "luck_wins": round(wins - xw, 2),
             "fcs_games": fcs_n, "weak_games": weak_n, "schedule": sched,
@@ -304,6 +324,8 @@ def predictions(games, ratings, week, cfg, lines=None):
         p = {"week": x["week"], "home": x["home"], "away": x["away"], "spread": round(spread, 1),
              "home_win_prob": round(phi(spread / cfg["game_sigma"]), 3),
              "pick": x["home"] if spread >= 0 else x["away"]}
+        if x["hqb"] or x["aqb"]:
+            p.update(home_qb=x["hqb"], away_qb=x["aqb"])
         books = (lines or {}).get(x["id"])
         if books:
             vegas = -float(np.median([b["spread"] for b in books]))
