@@ -27,7 +27,9 @@ jobs:
       - name: Build rankings
         env:
           CFBD_API_KEY: ${{ secrets.CFBD_API_KEY }}
-        run: python src/run_weekly.py ${{ inputs.season && format('--season {0}', inputs.season) || '' }}
+          SEASON: ${{ inputs.season }}
+        run: |
+          if [[ "$SEASON" =~ ^[0-9]{4}$ ]]; then python src/run_weekly.py --season "$SEASON"; else python src/run_weekly.py; fi
       - name: Publish
         run: |
           git config user.name "rankings-bot"
