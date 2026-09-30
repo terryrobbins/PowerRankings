@@ -111,7 +111,8 @@ def main():
         latest = max(L["seasons"], key=int)
         L.update(
             latest={"season": int(latest), "week": max(L["seasons"][latest]["weeks"])},
-            factors=[{"key": k, "label": lbl, "help": (model.NFL_HELP.get(k, h) if league == "nfl" else h)}
+            factors=[{"key": k, "label": lbl, "help": (model.NFL_HELP.get(k, h) if league == "nfl" else h),
+                      **({"invert": True} if k in model.INVERTED else {})}
                      for k, lbl, h in model.FACTORS if k in weights],
             default_weights=weights,
             updated=datetime.now(timezone.utc).isoformat(timespec="minutes"),

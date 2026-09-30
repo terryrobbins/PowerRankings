@@ -1,4 +1,4 @@
-# Power Rankings (CFB + NFL)
+# The Cupcake Index (CFB + NFL)
 
 Weekly college football and NFL power rankings based on who you played and how you played, not on brand name.
 Every Monday morning GitHub rebuilds the rankings and updates the website automatically. Your PC doesn't need to be on.
@@ -33,7 +33,8 @@ That's it. From now on it runs every Monday at 9am Eastern from August through J
 ## Using the site
 - **CFB / NFL** toggle at the top right.
 - **Sliders** change how much each factor counts. The rankings re-sort instantly, and your settings are remembered on that device (separately for each league).
-- **Click a column header** (PWR, RES, EFF, …) to rank by that factor only. Click it again to go back. On phones, use the "Rank by" dropdown.
+- **Click a column header** (PWR, RES, EFF, CUP, …) to sort by that factor, high to low. Click again for low to high, and a third time to go back to your blend. **Record** and **AP** sort the same way. On phones, use the "Rank by" dropdown.
+- **Cupcake (CUP):** higher = softer schedule. It counts against a team.
 - **Clear all** sets every slider to 0. **Reset** restores the defaults.
 - **Presets**: *Who'd you beat* (pure résumé), *Who'd win* (predictive), *Hot right now* (recent form).
 - **Click a team** to see why it's ranked where it is: its schedule, cupcake games, and luck.
@@ -41,6 +42,9 @@ That's it. From now on it runs every Monday at 9am Eastern from August through J
 - **Next week's picks** compares the model's spread with the sportsbooks' spreads and tracks its record straight up and against the spread. College lines come from DraftKings, Bovada, and ESPN Bet. NFL lines come from DraftKings plus the market consensus.
 - **NFL QB flags:** ⚠ marks games where someone other than the team's usual starter played or is listed to start. The rating doesn't adjust for QB changes, so treat flagged picks with caution.
 - To share a team, copy the link while its panel is open.
+
+## Scores, stats, standings (live)
+The **Scores**, **Stats**, **Standings**, game, player and team pages load straight from ESPN's public data feed in the visitor's browser. No key or server is needed, and they refresh automatically during live games. ESPN doesn't officially document this feed, so if a page ever breaks, ESPN probably changed something. The rankings are unaffected either way.
 
 ## Tweaking the model
 The numbers in `src/config.yaml` are plain-English settings (margin cap, how bad FCS teams are assumed to be, default slider positions). Edit them on GitHub (click the file → pencil icon → **Commit changes**), then press **Run workflow** again.

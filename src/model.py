@@ -9,6 +9,7 @@ from math import erf, sqrt
 import numpy as np
 
 FCS = "FCS"  # every non-FBS opponent is pooled into this one node
+INVERTED = {"cupcake"}  # higher score = worse; the website blends these as (100 - score)
 
 FACTORS = [
     ("power", "Power", "Opponent-adjusted scoring margin, capped so blowouts of bad teams don't count extra."),
@@ -16,7 +17,7 @@ FACTORS = [
     ("efficiency", "Efficiency", "Opponent-adjusted EPA/play and success rate, garbage time removed."),
     ("sos", "Schedule", "Average rating of opponents played (FCS opponents drag this down)."),
     ("recent", "Recent form", "How the team has played in its last few games."),
-    ("cupcake", "No cupcakes", "Penalty for FCS and bottom-tier FBS opponents. 100 = no cupcakes."),
+    ("cupcake", "Cupcake", "How padded the schedule is with FCS and bottom-tier FBS opponents. Higher = more cupcakes, and it counts against the team."),
     ("luck", "Bad luck", "Higher = has had bad luck: lost games they statistically won, so the record undersells them. Lower = has been winning coin flips."),
 ]
 
@@ -62,6 +63,7 @@ def normalize_games(raw_games, fbs):
             "hp": hp, "ap": ap, "done": done, "neutral": bool(g(x, "neutralSite", "neutral_site", default=False)),
             "hwp": g(x, "homePostgameWinProbability", "home_post_win_prob"),
             "start": g(x, "startDate", "start_date"),
+            "espn": g(x, "espn", default=g(x, "id")),  # CFBD game ids are ESPN ids; nflverse provides them
             "hqb": g(x, "homeQB"), "aqb": g(x, "awayQB"), "hrest": g(x, "homeRest"), "arest": g(x, "awayRest"),
         })
     return out
@@ -228,8 +230,9 @@ def build_week(fbs, games, advanced, polls, week, cfg, prior):
             loc = "N" if x["neutral"] else ("H" if home else "A")
             loc_pts = 0 if x["neutral"] else (cfg["home_field"] if home else -cfg["home_field"])
             ro = R[onode]
-            row = {"week": x["week"], "opp": opp, "fcs": onode == FCS, "loc": loc,
-                   "opp_rank": rank.get(onode), "opp_rating": round(ro, 1)}
+            row = {"week": x["week"], "opp": opp, "fcs": onode == FCS, "loc": loc, "espn_id": x["espn"],
+                   "opp_rank": rank.get(onode), "opp_rating": round(ro, 1),
+                   "cupcake": onode == FCS or rank[onode] > cfg["cupcake_rank"]}
             qb = x["hqb"] if home else x["aqb"]
             if qb:
                 row["qb"] = qb
@@ -257,7 +260,7 @@ def build_week(fbs, games, advanced, polls, week, cfg, prior):
                 opp_ratings.append(ro)
                 perfs.append(perf)
                 row.update(score=f"{us}-{them}", result="W" if won else "L", perf=round(perf, 1),
-                           difficulty=round(1 - p25, 2), cupcake=onode == FCS or rank[onode] > cfg["cupcake_rank"])
+                           difficulty=round(1 - p25, 2))
             else:
                 spread = (R[t] - ro + loc_pts) * cfg.get("spread_scale", 1.0)
                 row.update(upcoming=True, spread=round(spread, 1), win_prob=round(phi(spread / cfg["game_sigma"]), 2))
@@ -269,7 +272,7 @@ def build_week(fbs, games, advanced, polls, week, cfg, prior):
                                 + 0.3 * sr.get(t, 0) / (np.std(list(sr.values())) or 1)) if ppa else R[t]
         raw["sos"][t] = float(np.mean(opp_ratings)) if opp_ratings else 0.0
         raw["recent"][t] = float(np.mean(perfs[-cfg["recent_games"]:])) if perfs else R[t]
-        raw["cupcake"][t] = -(fcs_n + 0.5 * weak_n) / n if n else 0.0
+        raw["cupcake"][t] = (fcs_n + 0.5 * weak_n) / n if n else 0.0
         raw["luck"][t] = -(wins - xw)
         qbs = [r["qb"] for r in sched if r.get("qb") and "result" in r]
         nxt = next((r for r in sched if r.get("upcoming")), None)
@@ -287,7 +290,8 @@ def build_week(fbs, games, advanced, polls, week, cfg, prior):
         info = fbs[t]
         logos = g(info, "logos", default=[]) or []
         out.append({
-            "team": t, "conference": g(info, "conference"), "color": g(info, "color"),
+            "team": t, "id": g(info, "id") if not g(info, "abbr") else None,  # CFBD team ids are ESPN ids
+            "conference": g(info, "conference"), "color": g(info, "color"),
             "logo": logos[0] if logos else None, "rating": round(R[t], 2), "power_rank": rank[t],
             "ap_rank": ap.get(t), "prior": round(prior.get(t, 0), 1) if prior else None,
             "scores": {f: scores[f][t] for f in scores},
@@ -321,7 +325,7 @@ def predictions(games, ratings, week, cfg, lines=None):
         if x["week"] != week + 1:
             continue
         spread = (ratings[x["hnode"]] - ratings[x["anode"]] + (0 if x["neutral"] else cfg["home_field"])) * cfg.get("spread_scale", 1.0)
-        p = {"week": x["week"], "home": x["home"], "away": x["away"], "spread": round(spread, 1),
+        p = {"week": x["week"], "home": x["home"], "away": x["away"], "espn_id": x["espn"], "spread": round(spread, 1),
              "home_win_prob": round(phi(spread / cfg["game_sigma"]), 3),
              "pick": x["home"] if spread >= 0 else x["away"]}
         if x["hqb"] or x["aqb"]:

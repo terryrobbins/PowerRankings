@@ -107,8 +107,9 @@
     },
     {
      "key": "cupcake",
-     "label": "No cupcakes",
-     "help": "Penalty for FCS and bottom-tier FBS opponents. 100 = no cupcakes."
+     "label": "Cupcake",
+     "help": "How padded the schedule is with FCS and bottom-tier FBS opponents. Higher = more cupcakes, and it counts against the team.",
+     "invert": true
     },
     {
      "key": "luck",
@@ -125,7 +126,7 @@
     "cupcake": 5,
     "luck": 5
    },
-   "updated": "2026-09-30T15:59+00:00"
+   "updated": "2026-09-30T16:39+00:00"
   },
   "nfl": {
    "seasons": {
@@ -247,8 +248,8 @@
     "recent": 10,
     "luck": 5
    },
-   "updated": "2026-09-30T16:02+00:00"
+   "updated": "2026-09-30T16:39+00:00"
   }
  },
- "updated": "2026-09-30T16:02+00:00"
+ "updated": "2026-09-30T16:39+00:00"
 }

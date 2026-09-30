@@ -9,7 +9,7 @@ cfb:
     efficiency: 20   # Opponent-adjusted EPA/play + success rate, garbage time removed
     sos: 10          # Average strength of opponents played
     recent: 10       # How the team has played in its last few games
-    cupcake: 5       # Penalty for padding the schedule with FCS / bottom-tier FBS teams
+    cupcake: 5       # Cupcake score (higher = softer schedule) counts AGAINST a team
     luck: 5          # "Bad luck": boost for unlucky teams, penalty for teams winning coin flips
   model:
     margin_cap: 24          # Points. A 63-0 win counts the same as a 24-0 win.
