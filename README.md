@@ -11,7 +11,7 @@ Every Monday morning GitHub rebuilds the rankings and updates the website automa
 
 ### 2. Put the project on GitHub
 1. Create a free account at <https://github.com> if you don't have one.
-2. Click **+** (top right) → **New repository**. Name it `power-rankings`, set it to **Public**, and **don't** add a README. Click **Create repository**.
+2. Click **+** (top right) → **New repository**. Name it `PowerRankings`, set it to **Public**, and **don't** add a README. Click **Create repository**.
 3. Tell Claude the repository URL. It will push the code for you (a GitHub sign-in window may pop up once).
 
 ### 3. Give GitHub your data key
@@ -21,7 +21,7 @@ Every Monday morning GitHub rebuilds the rankings and updates the website automa
 ### 4. Turn on the website
 1. **Settings** → **Pages**.
 2. Under "Build and deployment", set Source to **Deploy from a branch**, Branch to **main**, and folder to **/docs**. Click **Save**.
-3. Your site will be at `https://<your-username>.github.io/power-rankings/`. Bookmark it.
+3. Your site will be at <https://terryrobbins.github.io/PowerRankings/>. Bookmark it.
 
 ### 5. Run it the first time
 1. Go to the **Actions** tab. If asked, click **I understand my workflows, go ahead and enable them**.
