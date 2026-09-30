@@ -8,7 +8,8 @@ const store = {
 
 let INDEX, LG, DATA, PREV, weights, ranked = [];
 let league = "cfb";
-let beforeSolo = null; // weights to restore when a selected column header is clicked again
+let beforeSolo = null; // weights to restore after cycling through a column header
+let reverse = false;    // true = showing the bottom of the list first
 
 const PRESETS = {
   "Default": null,
@@ -52,7 +53,12 @@ async function init() {
   $("#reset").onclick = () => setWeights(LG.default_weights);
   $("#clear").onclick = () => setWeights({});
   document.querySelector("th.factors-col").onclick = (e) => { const k = e.target.dataset.only; if (k) solo(k); };
-  $("#rankby").onchange = (e) => { const k = e.target.value; k ? solo(k) : setWeights(beforeSolo || LG.default_weights); };
+  $("#rankby").onchange = (e) => {
+    const [k, dir] = e.target.value.split(":");
+    if (!k) return restoreBlend();
+    if (soloKey() !== k) beforeSolo = beforeSolo || { ...weights };
+    setWeights({ [k]: 100 }, dir === "asc");
+  };
 
   $("#season").onchange = () => { fillWeeks(); loadWeek(); };
   $("#week").onchange = loadWeek;
@@ -91,7 +97,8 @@ async function switchLeague(l, first = false) {
   $("#search").placeholder = l === "nfl" ? "Search team…" : "Search team…";
   $("#conf").options[0].textContent = l === "nfl" ? "All divisions" : "All conferences";
   beforeSolo = null;
-  $("#rankby").innerHTML = `<option value="">Blend (sliders)</option>` + LG.factors.map((f) => `<option value="${esc(f.key)}">${esc(f.label)} only</option>`).join("");
+  $("#rankby").innerHTML = `<option value="">Blend (sliders)</option>` + LG.factors.map((f) =>
+    `<option value="${esc(f.key)}:desc">${esc(f.label)}: best first</option><option value="${esc(f.key)}:asc">${esc(f.label)}: worst first</option>`).join("");
   buildSliders();
   if (!first) history.replaceState(null, "", location.pathname + "#league=" + l);
   await loadWeek();
@@ -138,12 +145,13 @@ function buildSliders() {
   LG.factors.forEach((f) => {
     const el = $("#w-" + f.key);
     el.value = weights[f.key] ?? 0;
-    el.oninput = () => { weights[f.key] = +el.value; store.set("weights_" + league, weights); showWeights(); render(); };
+    el.oninput = () => { reverse = false; weights[f.key] = +el.value; store.set("weights_" + league, weights); showWeights(); render(); };
   });
   showWeights();
 }
 
-function setWeights(w) {
+function setWeights(w, rev = false) {
+  reverse = rev;
   weights = Object.fromEntries(LG.factors.map((f) => [f.key, (w || {})[f.key] ?? 0]));
   store.set("weights_" + league, weights);
   LG.factors.forEach((f) => ($("#w-" + f.key).value = weights[f.key]));
@@ -151,14 +159,17 @@ function setWeights(w) {
   render();
 }
 
+// Header clicks cycle: best first -> worst first -> back to the previous blend
 function solo(key) {
-  if (soloKey() === key) {  // clicking the selected header again undoes it
-    setWeights(beforeSolo || LG.default_weights);
-    beforeSolo = null;
-    return;
-  }
+  if (soloKey() === key && !reverse) return setWeights({ [key]: 100 }, true);
+  if (soloKey() === key) return restoreBlend();
   if (!soloKey()) beforeSolo = { ...weights };
   setWeights({ [key]: 100 });
+}
+
+function restoreBlend() {
+  setWeights(beforeSolo || LG.default_weights);
+  beforeSolo = null;
 }
 
 function soloKey() {
@@ -172,9 +183,9 @@ function showWeights() {
   LG.factors.forEach((f) => {
     $("#v-" + f.key).textContent = total ? Math.round((100 * (weights[f.key] || 0)) / total) + "%" : "0%";
   });
-  $("#rankby").value = only || "";
+  $("#rankby").value = only ? `${only}:${reverse ? "asc" : "desc"}` : "";
   $("#weights-note").textContent = !total ? "All weights are 0. Showing teams ordered by Power rating. Move a slider or click Only."
-    : only ? `Ranking by ${LG.factors.find((f) => f.key === only).label} only. Click its column header again to undo.` : "";
+    : only ? `Ranking by ${LG.factors.find((f) => f.key === only).label} only, ${reverse ? "worst first. Click the header again to go back to your blend." : "best first. Click the header again for worst first."}` : "";
 }
 
 function composite(teams) {
@@ -200,7 +211,7 @@ function render() {
   ranked = composite(DATA.teams);
   const prevRank = PREV ? Object.fromEntries(composite(PREV.teams).map((t) => [t.team, t.rank])) : {};
   const q = $("#search").value.trim().toLowerCase(), conf = $("#conf").value, top = $("#top25").checked;
-  const rows = ranked.filter((t) => (!q || t.team.toLowerCase().includes(q)) && (!conf || t.conference === conf) && (!top || t.rank <= topN()));
+  const rows = (reverse ? [...ranked].reverse() : ranked).filter((t) => (!q || t.team.toLowerCase().includes(q)) && (!conf || t.conference === conf) && (!top || t.rank <= topN()));
   const only = soloKey();
   $("#table tbody").innerHTML = rows.map((t) => {
     const p = prevRank[t.team], d = p ? p - t.rank : 0;
@@ -214,7 +225,7 @@ function render() {
       <td><div class="score">${t.comp.toFixed(1)}<span class="bar"><i style="width:${+t.comp || 0}%"></i></span></div></td>
       <td class="factors"><div class="chips">${chips}</div></td></tr>`;
   }).join("");
-  const labels = LG.factors.map((f) => `<button class="chip head${only === f.key ? " sel" : ""}" data-only="${esc(f.key)}" title="Rank by ${esc(f.label)} only. ${esc(f.help)}">${SHORT[f.key] || esc(f.label.slice(0, 4))}</button>`).join("");
+  const labels = LG.factors.map((f) => `<button class="chip head${only === f.key ? " sel" : ""}" data-only="${esc(f.key)}" title="Click: rank by ${esc(f.label)} only. Again: worst first. Again: back to your blend. ${esc(f.help)}">${SHORT[f.key] || esc(f.label.slice(0, 4))}${only === f.key ? (reverse ? " ▲" : " ▼") : ""}</button>`).join("");
   document.querySelector("th.factors-col").innerHTML = `<div class="chips">${labels}</div>`;
 }
 

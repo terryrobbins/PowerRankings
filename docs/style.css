@@ -140,3 +140,4 @@ body.no-ap .ap { display: none; }
 .sched small { display: block; font-size: 11px; }
 #table td small.muted { display: block; }
 @media (max-width: 640px) { #rankby { display: block; } }
+button.chip.head.sel { width: auto; padding: 2px 4px; }
