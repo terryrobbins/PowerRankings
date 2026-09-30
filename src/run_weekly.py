@@ -44,6 +44,7 @@ def main():
     fbs = model.fbs_teams(d["teams"])
     games = model.normalize_games(d["games"], fbs)
     prior = model.preseason_prior(sorted(fbs), prev_R, d["talent"], d["returning"])
+    lines = model.lines_by_game(d.get("lines", []))
     last = model.last_completed_week(games)
     print(f"  {len(fbs)} FBS teams, {sum(x['done'] for x in games)} completed games, through week {last}")
 
@@ -52,21 +53,34 @@ def main():
     weeks, graded = [], []
     for week in (range(1, last + 1) if last else [0]):
         res = model.build_week(fbs, games, d["advanced"], d["polls"], week, cfg, prior)
-        picks = model.predictions(games, res.pop("ratings"), week, cfg)
-        graded += [p for p in picks if p.get("correct") is not None]
+        picks = model.predictions(games, res.pop("ratings"), week, cfg, lines)
+        graded += [p for p in picks if "actual" in p]
         res.update(season=season, predictions=picks,
                    generated=datetime.now(timezone.utc).isoformat(timespec="minutes"))
         (out_dir / f"week_{week}.json").write_text(json.dumps(res, separators=(",", ":")), encoding="utf-8")
         weeks.append(week)
 
+    def record(key, rows):
+        rows = [p for p in rows if p.get(key) is not None]
+        return {"games": len(rows), "correct": sum(p[key] for p in rows)}
+
+    su = record("correct", graded)
+    with_line = [p for p in graded if "vegas" in p]
     acc = {
-        "games": len(graded),
-        "correct": sum(p["correct"] for p in graded),
+        **su,
         "mae": round(sum(p["error"] for p in graded) / len(graded), 1) if graded else None,
+        "vegas_su": record("vegas_correct", with_line),       # same games, books' favorite
+        "model_su_lined": record("correct", with_line),
+        "ats": record("ats_correct", with_line),
+        "ats_strong": record("ats_correct", [p for p in with_line if abs(p["edge"]) >= 3]),
+        "vegas_mae": round(sum(abs(p["actual"] - p["vegas"]) for p in with_line) / len(with_line), 1) if with_line else None,
     }
+    pct = lambda r: f"{r['correct']}/{r['games']} ({r['correct'] / r['games']:.1%})" if r["games"] else "n/a"
     if graded:
-        print(f"  model picks: {acc['correct']}/{acc['games']} "
-              f"({acc['correct'] / acc['games']:.1%}) straight up, avg miss {acc['mae']} pts")
+        print(f"  model straight up: {pct(su)}, avg miss {acc['mae']} pts")
+        print(f"  on games with a line: model {pct(acc['model_su_lined'])} vs books {pct(acc['vegas_su'])}; "
+              f"books avg miss {acc['vegas_mae']} pts")
+        print(f"  model vs the spread: {pct(acc['ats'])}; edges of 3+ pts: {pct(acc['ats_strong'])}")
 
     idx_file = OUT / "index.json"
     idx = json.loads(idx_file.read_text(encoding="utf-8")) if idx_file.exists() else {"seasons": {}}

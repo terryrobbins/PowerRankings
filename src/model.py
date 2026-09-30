@@ -243,7 +243,7 @@ def build_week(fbs, games, advanced, polls, week, cfg, prior):
                 row.update(score=f"{us}-{them}", result="W" if won else "L", perf=round(perf, 1),
                            difficulty=round(1 - p25, 2), cupcake=onode == FCS or rank[onode] > cfg["cupcake_rank"])
             else:
-                spread = R[t] - ro + loc_pts
+                spread = (R[t] - ro + loc_pts) * cfg.get("spread_scale", 1.0)
                 row.update(upcoming=True, spread=round(spread, 1), win_prob=round(phi(spread / cfg["game_sigma"]), 2))
             sched.append(row)
         n = wins + losses
@@ -277,19 +277,50 @@ def build_week(fbs, games, advanced, polls, week, cfg, prior):
     return {"week": week, "prior_weight": round(k, 2), "teams": out, "ratings": R}
 
 
-def predictions(games, ratings, week, cfg):
-    """Model picks for week+1 games, graded if they've been played."""
+def lines_by_game(raw_lines):
+    """{game id: [book lines]}. CFBD spreads are from the home side: -7 = home favored by 7."""
+    out = {}
+    for x in raw_lines:
+        books = [{"book": g(l, "provider"), "spread": float(l["spread"]),
+                  "open": g(l, "spreadOpen", "spread_open"), "total": g(l, "overUnder", "over_under"),
+                  "home_ml": g(l, "homeMoneyline", "home_moneyline"), "away_ml": g(l, "awayMoneyline", "away_moneyline")}
+                 for l in g(x, "lines", default=[]) if g(l, "spread") is not None]
+        if books:
+            out[g(x, "id")] = books
+    return out
+
+
+def predictions(games, ratings, week, cfg, lines=None):
+    """Model picks for week+1 games vs. the sportsbooks, graded if they've been played.
+
+    `spread` / `vegas` are expected home margins (positive = home favored).
+    `edge` = model minus Vegas: positive means the model likes the home side more than the books do.
+    """
     out = []
     for x in games:
         if x["week"] != week + 1:
             continue
-        spread = ratings[x["hnode"]] - ratings[x["anode"]] + (0 if x["neutral"] else cfg["home_field"])
+        spread = (ratings[x["hnode"]] - ratings[x["anode"]] + (0 if x["neutral"] else cfg["home_field"])) * cfg.get("spread_scale", 1.0)
         p = {"week": x["week"], "home": x["home"], "away": x["away"], "spread": round(spread, 1),
              "home_win_prob": round(phi(spread / cfg["game_sigma"]), 3),
              "pick": x["home"] if spread >= 0 else x["away"]}
+        books = (lines or {}).get(x["id"])
+        if books:
+            vegas = -float(np.median([b["spread"] for b in books]))
+            edge = spread - vegas
+            ats_home = edge > 0
+            # best number for the model's side: most points when taking home, fewest when laying with away
+            best = max(books, key=lambda b: b["spread"]) if ats_home else min(books, key=lambda b: b["spread"])
+            p.update(books=books, vegas=round(vegas, 1), edge=round(edge, 1),
+                     ats_pick=x["home"] if ats_home else x["away"], best_book=best["book"],
+                     best_line=best["spread"] if ats_home else -best["spread"])
         if x["done"]:
             actual = x["hp"] - x["ap"]
             p.update(actual=actual, correct=(actual > 0) == (spread >= 0) if actual != 0 else None,
                      error=round(abs(actual - spread), 1))
+            if books:
+                cover = actual - p["vegas"]  # home margin beyond the line
+                p.update(vegas_correct=(actual > 0) == (p["vegas"] > 0) if actual and p["vegas"] else None,
+                         ats_correct=None if cover == 0 or p["edge"] == 0 else (cover > 0) == (p["edge"] > 0))
         out.append(p)
     return out

@@ -22,7 +22,24 @@
    "accuracy": {
     "games": 792,
     "correct": 588,
-    "mae": 12.8
+    "mae": 12.6,
+    "vegas_su": {
+     "games": 792,
+     "correct": 601
+    },
+    "model_su_lined": {
+     "games": 792,
+     "correct": 588
+    },
+    "ats": {
+     "games": 771,
+     "correct": 400
+    },
+    "ats_strong": {
+     "games": 475,
+     "correct": 253
+    },
+    "vegas_mae": 11.9
    }
   },
   "2026": {
@@ -35,7 +52,24 @@
    "accuracy": {
     "games": 232,
     "correct": 190,
-    "mae": 13.6
+    "mae": 12.7,
+    "vegas_su": {
+     "games": 232,
+     "correct": 203
+    },
+    "model_su_lined": {
+     "games": 232,
+     "correct": 190
+    },
+    "ats": {
+     "games": 226,
+     "correct": 116
+    },
+    "ats_strong": {
+     "games": 155,
+     "correct": 75
+    },
+    "vegas_mae": 10.8
    }
   }
  },
@@ -89,5 +123,5 @@
   "cupcake": 5,
   "luck": 5
  },
- "updated": "2026-09-30T15:37+00:00"
+ "updated": "2026-09-30T15:48+00:00"
 }

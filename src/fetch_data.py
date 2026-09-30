@@ -1,7 +1,7 @@
 """Download raw data from the CollegeFootballData.com API (free key required).
 
 Everything is cached under data/raw/<year>/ so re-running the model doesn't
-spend API calls. A full weekly run uses about 8 calls (the free tier allows 1,000/month).
+spend API calls. A full weekly run uses about 9 calls (the free tier allows 1,000/month).
 """
 import json
 import os
@@ -58,6 +58,7 @@ def fetch_season(year, refresh=False, with_extras=True):
         return d
     d["advanced"] = cached(year, "advanced_games", "/stats/game/advanced", refresh,
                            year=year, seasonType="regular", excludeGarbageTime="true")
+    d["lines"] = cached(year, "lines", "/lines", refresh, year=year, seasonType="regular")
     d["polls"] = cached(year, "rankings", "/rankings", refresh, year=year, seasonType="regular")
     # Talent/returning production are preseason numbers: never need a refresh once present.
     d["talent"] = _optional(year, "talent", "/talent", year=year)

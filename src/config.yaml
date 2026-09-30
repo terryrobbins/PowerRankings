@@ -22,3 +22,4 @@ model:
   prior_games: 3          # Preseason expectation counts like this many games in week 1...
   prior_fade_week: 7      # ...and fades to zero by this week
   one_score: 8            # Margin that counts as a "one-score game"
+  spread_scale: 1.2       # Stretch predicted spreads (the margin cap compresses them). Fit on 2025 results.

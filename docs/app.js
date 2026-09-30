@@ -202,20 +202,43 @@ function openTeam(name) {
   history.replaceState(null, "", "#team=" + encodeURIComponent(name));
 }
 
+const BOOK_ABBR = { DraftKings: "DK", Bovada: "Bovada", "ESPN Bet": "ESPN", FanDuel: "FD", BetMGM: "MGM", Caesars: "CZR" };
+const signed = (n) => (n > 0 ? "+" : n < 0 ? "−" : "") + Math.abs(n);
+// Home-perspective margin (positive = home favored) -> "Team -7.5"
+const lineText = (g, margin) => margin === 0 ? "Pick'em" : `${esc(margin > 0 ? g.home : g.away)} −${Math.abs(margin).toFixed(1)}`;
+const rec = (r) => r && r.games ? `${r.correct}-${r.games - r.correct} (${((100 * r.correct) / r.games).toFixed(1)}%)` : "—";
+
 function renderPicks() {
   const p = DATA.predictions || [];
-  const nextWeek = DATA.week + 1;
-  $("#picks-title").textContent = `Week ${nextWeek} picks (made after week ${DATA.week})`;
-  const acc = INDEX.seasons[$("#season").value].accuracy;
-  $("#acc").textContent = acc.games
-    ? `Season record: ${acc.correct}/${acc.games} (${((100 * acc.correct) / acc.games).toFixed(1)}%) straight up, average miss ${acc.mae} points.`
+  $("#picks-title").textContent = `Week ${DATA.week + 1} picks vs. the sportsbooks (made after week ${DATA.week})`;
+  const a = INDEX.seasons[$("#season").value].accuracy;
+  $("#acc").innerHTML = a.games ? `
+    <b>Season record.</b> Straight up: model ${rec(a.model_su_lined || a)} vs. books' favorite ${rec(a.vegas_su)}.
+    Against the spread: ${rec(a.ats)}, and on 3+ point disagreements, ${rec(a.ats_strong)}. You need 52.4% to break even on a bet at standard −110 odds.
+    <br>The books usually know more (injuries, weather, sharp money). Where the model disagrees, treat it as a conversation starter, not a bet.`
     : "Picks are graded once the games are played.";
-  const rows = [...p].sort((a, b) => Math.abs(a.spread) - Math.abs(b.spread));
+  const edgeKey = (g) => (g.edge == null ? -1 : Math.abs(g.edge));
+  const rows = [...p].sort((x, y) => edgeKey(y) - edgeKey(x) || Math.abs(x.spread) - Math.abs(y.spread));
   $("#picks tbody").innerHTML = rows.length ? rows.map((g) => {
-    const res = g.actual === undefined ? '<span class="muted">—</span>'
-      : `<span class="${g.correct ? "W" : "L"}">${g.correct ? "✓" : "✗"}</span> ${esc(g.actual > 0 ? g.home : g.away)} by ${Math.abs(g.actual)}`;
+    const books = g.books ? g.books.map((b) => {
+      // Book lines are home-side; show them from the same favorite as the median line
+      const favHome = g.vegas >= 0, bookFavHome = b.spread <= 0;
+      const txt = b.spread === 0 ? "PK" : (bookFavHome === favHome ? "" : esc(bookFavHome ? g.home : g.away) + " ") + "−" + Math.abs(b.spread);
+      const tip = `${b.book}${b.total ? " · O/U " + b.total : ""}${b.open != null ? ` · opened ${g.home} ${signed(b.open)}` : ""}`;
+      return `<span class="book" title="${esc(tip)}">${esc(BOOK_ABBR[b.book] || b.book)} ${txt}</span>`;
+    }).join("") : '<span class="muted">No line yet</span>';
+    const edge = g.edge == null ? '<span class="muted">—</span>'
+      : `<b class="${Math.abs(g.edge) >= 3 ? "hot" : ""}">${esc(g.ats_pick)} ${signed(g.best_line)}</b><small class="muted">edge ${Math.abs(g.edge).toFixed(1)} · best at ${esc(BOOK_ABBR[g.best_book] || g.best_book)}</small>`;
+    let res = '<span class="muted">—</span>';
+    if (g.actual !== undefined) {
+      const mark = (ok) => ok == null ? '<span class="muted">push</span>' : `<span class="${ok ? "W" : "L"}">${ok ? "✓" : "✗"}</span>`;
+      res = `${esc(g.actual > 0 ? g.home : g.away)} by ${Math.abs(g.actual)}<small class="muted">SU ${mark(g.correct)}${g.edge != null ? " · ATS " + mark(g.ats_correct) : ""}</small>`;
+    }
     const wp = g.pick === g.home ? g.home_win_prob : 1 - g.home_win_prob;
-    return `<tr><td>${esc(g.away)} @ ${esc(g.home)}</td><td><b>${esc(g.pick)}</b></td><td class="num">${Math.abs(g.spread).toFixed(1)}</td><td class="num">${Math.round(wp * 100)}%</td><td>${res}</td></tr>`;
+    return `<tr><td>${esc(g.away)} <span class="muted">@</span> ${esc(g.home)}</td>
+      <td>${lineText(g, g.spread)}<small class="muted">${esc(g.pick)} wins ${Math.round(wp * 100)}%</small></td>
+      <td>${g.vegas != null ? lineText(g, g.vegas) : '<span class="muted">—</span>'}<div class="books">${books}</div></td>
+      <td>${edge}</td><td>${res}</td></tr>`;
   }).join("") : `<tr><td colspan="5" class="muted">No games scheduled.</td></tr>`;
 }
 

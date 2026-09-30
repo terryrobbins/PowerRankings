@@ -118,3 +118,10 @@ tbody tr:last-child td { border-bottom: 0; }
   .score .bar { display: none; }
   .score-col { width: auto; }
 }
+
+#picks td { vertical-align: top; }
+#picks small { display: block; font-size: 11.5px; margin-top: 2px; }
+.books { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+.book { font-size: 11px; background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 1px 6px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.hot { color: var(--accent); }
+#acc { line-height: 1.6; }
