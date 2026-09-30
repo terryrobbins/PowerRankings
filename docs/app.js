@@ -125,7 +125,7 @@ async function loadWeek() {
   $("#conf").value = confs.includes(cur) ? cur : "";
   const hasAP = DATA.teams.some((t) => t.ap_rank);
   document.body.classList.toggle("no-ap", !hasAP);
-  $("#top25-label").lastChild.textContent = league === "nfl" ? " Top 10 only" : " Top 25 only";
+  $("#top25-label").lastChild.textContent = hasAP ? " AP Poll top 25 only" : league === "nfl" ? " Top 10 only" : " Top 25 only";
   $("#prior-note").textContent = DATA.prior_weight > 0
     ? `Early season: the preseason expectation still counts like ${DATA.prior_weight} game(s) in the Power rating. It fades to zero in a few weeks.`
     : "";
@@ -199,7 +199,8 @@ function composite(teams) {
 const heat = (v) => `background:hsla(${Math.round(v * 1.3)},65%,45%,.18)`;
 const safeUrl = (u) => (/^https:\/\//.test(u || "") ? u : "");
 const logo = (t, cls = "") => safeUrl(t.logo) ? `<img src="${esc(t.logo)}" alt="" loading="lazy" class="${cls}">` : `<span class="logo-ph ${cls}"></span>`;
-const topN = () => (league === "nfl" ? 10 : 25);
+// CFB: show only teams in the AP Top 25 (at wherever the model ranks them). NFL has no poll: model top 10.
+const inTopFilter = (t) => (document.body.classList.contains("no-ap") ? t.rank <= (league === "nfl" ? 10 : 25) : !!t.ap_rank);
 
 function apTag(t) {
   if (t.ap_rank && t.rank - t.ap_rank >= 10) return `<span class="pill over" title="AP has them ${t.rank - t.ap_rank} spots higher">Overrated</span>`;
@@ -211,7 +212,7 @@ function render() {
   ranked = composite(DATA.teams);
   const prevRank = PREV ? Object.fromEntries(composite(PREV.teams).map((t) => [t.team, t.rank])) : {};
   const q = $("#search").value.trim().toLowerCase(), conf = $("#conf").value, top = $("#top25").checked;
-  const rows = (reverse ? [...ranked].reverse() : ranked).filter((t) => (!q || t.team.toLowerCase().includes(q)) && (!conf || t.conference === conf) && (!top || t.rank <= topN()));
+  const rows = (reverse ? [...ranked].reverse() : ranked).filter((t) => (!q || t.team.toLowerCase().includes(q)) && (!conf || t.conference === conf) && (!top || inTopFilter(t)));
   const only = soloKey();
   $("#table tbody").innerHTML = rows.map((t) => {
     const p = prevRank[t.team], d = p ? p - t.rank : 0;
