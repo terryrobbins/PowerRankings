@@ -133,7 +133,7 @@
     "cupcake": 5,
     "luck": 5
    },
-   "updated": "2026-11-16T22:45+00:00"
+   "updated": "2026-11-17T21:29+00:00"
   },
   "nfl": {
    "seasons": {
@@ -195,23 +195,23 @@
       10
      ],
      "accuracy": {
-      "games": 132,
+      "games": 133,
       "correct": 84,
       "mae": 10.1,
       "vegas_su": {
-       "games": 132,
+       "games": 133,
        "correct": 90
       },
       "model_su_lined": {
-       "games": 132,
+       "games": 133,
        "correct": 84
       },
       "ats": {
-       "games": 127,
+       "games": 128,
        "correct": 71
       },
       "ats_strong": {
-       "games": 58,
+       "games": 59,
        "correct": 26
       },
       "vegas_mae": 9.4
@@ -262,8 +262,8 @@
     "recent": 10,
     "luck": 5
    },
-   "updated": "2026-11-16T22:45+00:00"
+   "updated": "2026-11-17T21:29+00:00"
   }
  },
- "updated": "2026-11-16T22:45+00:00"
+ "updated": "2026-11-17T21:29+00:00"
 }
