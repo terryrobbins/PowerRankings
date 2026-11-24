@@ -56,27 +56,28 @@
       8,
       9,
       10,
-      11
+      11,
+      12
      ],
      "accuracy": {
-      "games": 653,
-      "correct": 472,
-      "mae": 12.9,
+      "games": 723,
+      "correct": 525,
+      "mae": 12.8,
       "vegas_su": {
-       "games": 653,
-       "correct": 500
+       "games": 723,
+       "correct": 552
       },
       "model_su_lined": {
-       "games": 653,
-       "correct": 472
+       "games": 723,
+       "correct": 525
       },
       "ats": {
-       "games": 640,
-       "correct": 319
+       "games": 710,
+       "correct": 356
       },
       "ats_strong": {
-       "games": 393,
-       "correct": 189
+       "games": 427,
+       "correct": 203
       },
       "vegas_mae": 11.6
      }
@@ -84,7 +85,7 @@
    },
    "latest": {
     "season": 2026,
-    "week": 11
+    "week": 12
    },
    "factors": [
     {
@@ -133,7 +134,7 @@
     "cupcake": 5,
     "luck": 5
    },
-   "updated": "2026-11-17T21:29+00:00"
+   "updated": "2026-11-24T00:37+00:00"
   },
   "nfl": {
    "seasons": {
@@ -192,35 +193,36 @@
       7,
       8,
       9,
-      10
+      10,
+      11
      ],
      "accuracy": {
-      "games": 133,
-      "correct": 84,
-      "mae": 10.1,
+      "games": 145,
+      "correct": 94,
+      "mae": 10.0,
       "vegas_su": {
-       "games": 133,
-       "correct": 90
+       "games": 145,
+       "correct": 99
       },
       "model_su_lined": {
-       "games": 133,
-       "correct": 84
+       "games": 145,
+       "correct": 94
       },
       "ats": {
-       "games": 128,
-       "correct": 71
+       "games": 140,
+       "correct": 74
       },
       "ats_strong": {
-       "games": 59,
-       "correct": 26
+       "games": 65,
+       "correct": 27
       },
-      "vegas_mae": 9.4
+      "vegas_mae": 9.2
      }
     }
    },
    "latest": {
     "season": 2026,
-    "week": 10
+    "week": 11
    },
    "factors": [
     {
@@ -262,8 +264,8 @@
     "recent": 10,
     "luck": 5
    },
-   "updated": "2026-11-17T21:29+00:00"
+   "updated": "2026-11-24T00:37+00:00"
   }
  },
- "updated": "2026-11-17T21:29+00:00"
+ "updated": "2026-11-24T00:37+00:00"
 }
